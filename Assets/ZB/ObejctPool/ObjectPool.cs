@@ -6,8 +6,8 @@ namespace ZB.Object
 {
     public class ObjectPool : MonoBehaviour
     {
-        [SerializeField] bool InitOnAwake;
-        [SerializeField] SinglePool[] pools;
+        [SerializeField] private bool InitOnAwake;
+        [SerializeField] private SinglePool[] pools;
 
         public Transform Spawn(string name, Vector3 position)
         {
@@ -18,17 +18,24 @@ namespace ZB.Object
             }
             return null;
         }
-
         public T Spawn<T>(string name, Vector3 position)
         {
             return Spawn(name, position).GetComponent<T>();
         }
-
         public bool Spawn_TryGetComponent<T>(string name, Vector3 position, out T target)
         {
             return Spawn(name, position).TryGetComponent(out target);
         }
-
+        public bool Contains(string name)
+        {
+            for (int i = 0; i < pools.Length; i++)
+            {
+                if (pools[i].Name == name)
+                    return true;
+            }
+            return false;
+        }
+        [ContextMenu("Init")]
         public void Init()
         {
             for (int i = 0; i < pools.Length; i++)
@@ -37,7 +44,7 @@ namespace ZB.Object
             }
         }
 
-        private bool TryGetPool(string name, out SinglePool singlePool)
+        public bool TryGetPool(string name, out SinglePool singlePool)
         {
             singlePool = null;
             for (int i = 0; i < pools.Length; i++)
@@ -50,7 +57,6 @@ namespace ZB.Object
             }
             return false;
         }
-
         private void Awake()
         {
             if (InitOnAwake)
@@ -64,9 +70,10 @@ namespace ZB.Object
 
             [SerializeField] private string name;
             [SerializeField] private Transform original;
+            [SerializeField] private int initMax;
+            [Space]
             [SerializeField] private Transform[] pool;
             [SerializeField] private int index;
-            [SerializeField] private int initMax;
             private Transform parent;
 
             public Transform Spawn(Vector3 position)
@@ -90,24 +97,28 @@ namespace ZB.Object
 
             public Transform GetMargin()
             {
-                index = (index + 1) % pool.Length;
-
-                //여유 원소가 없다.
-                if (pool[index].gameObject.activeSelf)
+                //최근 인덱스부터 배열 전체를 순회하며 사용 가능한 원소 찾는다
+                for (int i = 0; i < pool.Length; i++)
                 {
-                    Transform[] tempArray = pool;
-                    pool = new Transform[tempArray.Length + 1];
-                    for (int i = 0; i < tempArray.Length; i++)
+                    index = (index + 1) % pool.Length;
+                    if (!pool[index].gameObject.activeSelf)
                     {
-                        pool[i] = tempArray[i];
+                        return pool[index];
                     }
-                    Transform temp = Instantiate(original);
-                    temp.SetParent(parent);
-                    pool[pool.Length - 1] = temp;
-                    temp.gameObject.SetActive(false);
-                    index = pool.Length - 1;
                 }
 
+                //여유 원소가 없다.
+                Transform[] tempArray = pool;
+                pool = new Transform[tempArray.Length + 1];
+                for (int i = 0; i < tempArray.Length; i++)
+                {
+                    pool[i] = tempArray[i];
+                }
+                Transform temp = Instantiate(original);
+                temp.SetParent(parent);
+                pool[pool.Length - 1] = temp;
+                temp.gameObject.SetActive(false);
+                index = pool.Length - 1;
                 return pool[index];
             }
 
