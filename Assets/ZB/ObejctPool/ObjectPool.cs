@@ -35,6 +35,15 @@ namespace ZB.Object
             }
             return false;
         }
+        public bool IsHaveMargin(string name)
+        {
+            SinglePool pool;
+            if (TryGetPool(name, out pool))
+            {
+                return pool.IsHaveMargin();
+            }
+            return false;
+        }
         [ContextMenu("Init")]
         public void Init()
         {
@@ -120,6 +129,19 @@ namespace ZB.Object
                 temp.gameObject.SetActive(false);
                 index = pool.Length - 1;
                 return pool[index];
+            }
+
+            public bool IsHaveMargin()
+            {
+                for (int i = 0; i < pool.Length; i++)
+                {
+                    index = (index + 1) % pool.Length;
+                    if (pool[index].gameObject.activeSelf)
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             public void Init(Transform parent)
