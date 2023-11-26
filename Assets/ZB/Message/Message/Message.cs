@@ -6,17 +6,16 @@ using UnityEngine.Events;
 [System.Serializable]
 public class StringUnityEvent : UnityEvent<string> { }
 
-namespace ZB.MessageSystem
+namespace ZB.Msg
 {
     public class Message : MonoBehaviour
     {
-        [SerializeField] private List<InsertedReaction> insertedReactions;
         [SerializeField] private List<string> currentMessages;
 
         private static Message instance;
-        Dictionary<string, Reaction> reactions;
+        private Reaction[] reactions;
 
-        public static void Send(string id, string message = "")
+        public static void Send(ID id, string message = "")
         {
             InstanceCheck();
 
@@ -26,7 +25,7 @@ namespace ZB.MessageSystem
                 reaction.Invoke(message);
             }
         }
-        public static UnityEvent GetSendedEvent(string id, string message)
+        public static UnityEvent GetSendedEvent(ID id, string message)
         {
             InstanceCheck();
             UnityEvent unityEvent = new UnityEvent();
@@ -35,7 +34,7 @@ namespace ZB.MessageSystem
             unityEvent.AddListener(() => reaction.Invoke(message));
             return unityEvent;
         }
-        public static UnityEvent GetSendedEvent_OrMakeElement(string id, string message)
+        public static UnityEvent GetSendedEvent_OrMakeElement(ID id, string message)
         {
             InstanceCheck();
 
@@ -48,58 +47,35 @@ namespace ZB.MessageSystem
                 return unityEvent;
             }
 
-            if (!instance.reactions.ContainsKey(id))
-            {
-                instance.reactions.Add(id, reaction);
-            }
-
             unityEvent.AddListener(() => reaction.Invoke(message));
             return unityEvent;
         }
-        public static void AddEvent(string id, UnityAction<string> action)
+        public static void AddEvent(ID id, UnityAction<string> action)
         {
             InstanceCheck();
 
             Reaction reaction = GetElement(id, false);
 
-            if (reaction == null)
-            { 
-                reaction = new Reaction();
-                reaction.AddListener((string message) => instance.AddCurrentMessage(id, message));
-                instance.reactions.Add(id, reaction);
-                instance.insertedReactions.Add(new InsertedReaction(id));
-            }
-
-            instance.reactions[id].AddListener(action);
-            instance.FindInsertedReaction(id).count++;
+            instance.reactions[(int)id].AddListener(action);
         }
-        public static void RemoveEvent(string id, UnityAction<string> action)
+        public static void RemoveEvent(ID id, UnityAction<string> action)
         {
             InstanceCheck();
 
             Reaction reaction = GetElement(id);
 
-            if (reaction != null)
-            {
-                instance.FindInsertedReaction(id).count--;
-                if (!reaction.RemoveListener(action))
-                {
-                    //이벤트에 더이상 액션 없을경우, 메시지 딕셔너리에서 제거
-                    instance.reactions.Remove(id);
-                    instance.insertedReactions.Remove(instance.FindInsertedReaction(id));
-                }
-            }
+            instance.reactions[(int)id].RemoveListener(action);
         }
 
-        private static Reaction GetElement(string id, bool logShow = true)
+        private static Reaction GetElement(ID id, bool logShow = true)
         {
-            if (!instance.reactions.ContainsKey(id))
+            if ((int)id > instance.reactions.Length) 
             {
                 if (logShow) 
                     Debug.LogError($"ZB.Message -> GetElement / id 입력오류 : {id}");
                 return null;
             }
-            return instance.reactions[id];
+            return instance.reactions[(int)id];
         }
         private static void InstanceCheck()
         {
@@ -117,35 +93,18 @@ namespace ZB.MessageSystem
                 currentMessages.RemoveAt(0);
             currentMessages.Add($"id : {id} / message : {message}");
         }
-        private InsertedReaction FindInsertedReaction(string name)
-        {
-            for (int i = 0; i < insertedReactions.Count; i++)
-            {
-                if (insertedReactions[i].name == name)
-                {
-                    return insertedReactions[i];
-                }
-            }
-            return null;
-        }
         private void Init()
         {
-            insertedReactions = new List<InsertedReaction>();
             currentMessages = new List<string>();
-            reactions = new Dictionary<string, Reaction>();
-            transform.SetSiblingIndex(0);
-        }
-
-        [System.Serializable]
-        public class InsertedReaction
-        {
-            public string name;
-            public int count;
-
-            public InsertedReaction(string name)
+            reactions = new Reaction[(int)ID.COUNT];
+            Debug.Log((int)ID.COUNT);
+            for (int i = 0; i < reactions.Length; i++)
             {
-                this.name = name;
+                string id2string = ((ID)i).ToString();
+                reactions[i] = new Reaction();
+                reactions[i].AddListener((string message) => AddCurrentMessage(id2string, message));
             }
+            transform.SetSiblingIndex(0);
         }
     }
 
