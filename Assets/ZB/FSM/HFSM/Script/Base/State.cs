@@ -22,6 +22,7 @@ namespace ZB.FSM.ObjectHFSM
         }
         public void OnEnter()
         {
+            Debug.Log($"Enter {GetName()}");
             EnterLogic();
             if (enterEvent != null) 
                 enterEvent.Invoke();
@@ -34,7 +35,7 @@ namespace ZB.FSM.ObjectHFSM
         }
         public void OnUpdate()
         {
-            EnterLogic();
+            UpdateLogic();
             if (updateEvent != null)
                 updateEvent.Invoke();
         }
@@ -62,10 +63,13 @@ namespace ZB.FSM.ObjectHFSM
         }
         public void OnConditionCheck()
         {
+            if (transitions == null) return;
+
             for (int i = 0; i < transitions.Count; i++)
             {
                 if (transitions[i].condition.Invoke())
                 {
+                    Debug.Log($"{GetName()} / {transitions[i].from} / {transitions[i].to}");
                     machine.SwapState(transitions[i].to);
                     return;
                 }

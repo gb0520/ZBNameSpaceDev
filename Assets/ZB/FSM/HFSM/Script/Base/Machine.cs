@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace ZB.FSM.ObjectHFSM
 {
@@ -19,6 +20,10 @@ namespace ZB.FSM.ObjectHFSM
         private List<Machine<ID>> subMachines;
         //상태변환조건 리스트
         private List<Transition<ID>> transitions;
+
+        private UnityEvent enterEvent;
+        private UnityEvent exitEvent;
+        private UnityEvent updateEvent;
 
         //최초상태
         private IState<ID> firstState;
@@ -40,11 +45,25 @@ namespace ZB.FSM.ObjectHFSM
             return t1.Equals(t2);
         }
 
-        public Machine(ID name)
+        public Machine(ID name, UnityAction enterAction = null, UnityAction exitAction = null, UnityAction stayAction = null)
         {
             this.machineName = name;
+            if (enterAction != null)
+            {
+                enterEvent = new UnityEvent();
+                enterEvent.AddListener(enterAction);
+            }
+            if (exitAction != null)
+            {
+                exitEvent = new UnityEvent();
+                exitEvent.AddListener(exitAction);
+            }
+            if (stayAction != null)
+            {
+                updateEvent = new UnityEvent();
+                updateEvent.AddListener(stayAction);
+            }
         }
-
 
         //* 상위 머신으로써의 역할
         /// <summary>
@@ -59,13 +78,21 @@ namespace ZB.FSM.ObjectHFSM
         /// 상태 추가
         /// </summary>
         /// <param name="state"></param>
-        public void AddState(params IState<ID>[] state)
+        public void AddState(bool firstIndexIsFirstState, params IState<ID>[] state)
         {
             states = states ?? new List<IState<ID>>();
-            for (int i = 0; i < state.Length; i++)
+            if (state.Length > 0)
             {
-                states.Add(state[i]);
-                state[i].SetHighMachine(this);
+                if (firstIndexIsFirstState)
+                {
+                    firstState = state[0];
+                }
+
+                for (int i = 0; i < state.Length; i++)
+                {
+                    states.Add(state[i]);
+                    state[i].SetHighMachine(this);
+                }
             }
         }
         /// <summary>
@@ -80,7 +107,7 @@ namespace ZB.FSM.ObjectHFSM
                 subMachines.Add(subMachine[i]);
             }
 
-            AddState(subMachine);
+            AddState(false, subMachine);
         }
         /// <summary>
         /// 서브머신 가져오기
@@ -106,7 +133,7 @@ namespace ZB.FSM.ObjectHFSM
         /// 활성화, 비활성화
         /// </summary>
         /// <param name="active"></param>
-        public void Active(bool active)
+        public void Active(bool active = true)
         {
             activing = active;
             if (!active) nowState = null;
@@ -122,16 +149,7 @@ namespace ZB.FSM.ObjectHFSM
             //현재 상태와, from이 일치할 경우
             if (IDEqual(nowState.GetName(), from)) 
             {
-                //리스트에서 다음상태 가져온다.
-                IState<ID> nextState = GetState(to);
-                if (nextState != null)
-                {
-                    nowState.OnExit();
-                    nowState = nextState;
-                    nowStateName = nextState.GetName();
-                    nowState.OnEnter();
-                }
-                return false;
+                return SwapState(to);
             }
             return false;
         }
@@ -139,20 +157,28 @@ namespace ZB.FSM.ObjectHFSM
         /// 상태전환
         /// </summary>
         /// <param name="to"></param>
-        public void SwapState(ID to)
+        public bool SwapState(ID to)
         {
             //리스트에서 다음상태 가져온다.
             IState<ID> nextState = GetState(to);
+            Machine<ID> machine = GetSubMachine(to);
+
             if (nextState != null)
             {
+                //현재 상태 Exit
                 nowState.OnExit();
+                //다음상태 연결
                 nowState = nextState;
                 nowStateName = nextState.GetName();
+                //다음상태가 서브머신일 경우, 초기상태로 변경
+                if (machine != null) machine.SetNowStateFirst();
+                //상태입장
                 nowState.OnEnter();
+                return true;
             }
+            return false;
         }
         
-
         //* IState에 의해 구현됨, 상태로써의 역할
         public void OnEnter()
         {
@@ -162,10 +188,14 @@ namespace ZB.FSM.ObjectHFSM
                 SetNowStateFirst();
             }
             nowState.OnEnter();
+            if (enterEvent != null)
+                enterEvent.Invoke();
         }
         public void OnExit()
         {
             nowState.OnExit();
+            if (exitEvent != null)
+                exitEvent.Invoke();
         }
         public void OnUpdate()
         {
@@ -177,8 +207,9 @@ namespace ZB.FSM.ObjectHFSM
                     nowState.OnEnter();
                 }
                 nowState.OnUpdate();
+                if (updateEvent != null)
+                    updateEvent.Invoke();
                 nowState.OnConditionCheck();
-                Debug.Log(nowState.GetName());
             }
         }
 
@@ -200,20 +231,22 @@ namespace ZB.FSM.ObjectHFSM
                 {
                     if (machine != null)
                     {
-                        machine.AddOwnTransition(transition);
+                        machine.AddOwnTransition(transition[i]);
                         return;
                     }
 
-                    state.AddTransition(transition);
+                    state.AddTransition(transition[i]);
                 }
             }
         }
         public void OnConditionCheck()
         {
+            if (transitions == null) return;
             for (int i = 0; i < transitions.Count; i++)
             {
                 if (transitions[i].condition.Invoke())
                 {
+                    Debug.Log($"{transitions[i].from} / {transitions[i].to}");
                     highMachine.SwapState(transitions[i].to);
                     return;
                 }
@@ -235,7 +268,6 @@ namespace ZB.FSM.ObjectHFSM
                 transitions.Add(transition[i]);
             }
         }
-
 
         //상태 가져오기
         private IState<ID> GetState(ID name)

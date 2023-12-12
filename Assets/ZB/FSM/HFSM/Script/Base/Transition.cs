@@ -12,10 +12,11 @@ namespace ZB.FSM.ObjectHFSM
 
         public bool Condition()
         {
+            if (condition == null) return false;
             return condition.Invoke();
         }
 
-        public Transition(ID from, ID to, BoolDelegate condition)
+        public Transition(ID from, ID to, BoolDelegate condition = null)
         {
             this.from = from;
             this.to = to;

@@ -46,7 +46,7 @@ namespace ZB.FSM.ObjectHFSM
                 new Transition<STATENAME>(STATENAME.sub1_2, STATENAME.sub1_1, () => subValue1 > 0);
 
             //상태, 전환조건 서브머신1에 연결
-            subMachine1.AddState(stateForSub1_1, stateForSub1_2);
+            subMachine1.AddState(false, stateForSub1_1, stateForSub1_2);
             subMachine1.AddFirstState(stateForSub1_1);
             subMachine1.AddTransition(transitionForSub1_1To2, transitionForSub1_2To1);
             //서브머신1 활성화
@@ -66,7 +66,7 @@ namespace ZB.FSM.ObjectHFSM
                 new Transition<STATENAME>(STATENAME.sub2_2, STATENAME.sub2_1, () => subValue2 > 0);
 
             //상태, 전환조건 서브머신1에 연결
-            subMachine2.AddState(stateForSub2_1, stateForSub2_2);
+            subMachine2.AddState(false, stateForSub2_1, stateForSub2_2);
             subMachine2.AddFirstState(stateForSub2_1);
             subMachine2.AddTransition(transitionForSub2_1To2, transitionForSub2_2To1);
             //서브머신2 활성화
@@ -88,7 +88,7 @@ namespace ZB.FSM.ObjectHFSM
 
             //서브머신, 전환조건 메인머신에 연결
             mainMachine.AddSubMachine(subMachine1, subMachine2);
-            mainMachine.AddState(stateForMain);
+            mainMachine.AddState(false, stateForMain);
             mainMachine.AddFirstState(subMachine1);
             mainMachine.AddTransition(transitionForMain_1To2);
             mainMachine.AddTransition(transitionForMain_2To1);
