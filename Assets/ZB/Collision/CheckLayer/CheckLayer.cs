@@ -19,7 +19,7 @@ namespace ZB.CollisionCheck
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (((1 << collision.gameObject.layer) & targetLayer) != 0)
+            if(CheckCondition(collision.gameObject))
             {
                 tf_lastTouched = collision.transform;
                 touching = true;
@@ -28,7 +28,7 @@ namespace ZB.CollisionCheck
         }
         private void OnCollisionExit(Collision collision)
         {
-            if (((1 << collision.gameObject.layer) & targetLayer) != 0)
+            if (CheckCondition(collision.gameObject))
             {
                 touching = false;
                 uEvent_Exit.Invoke();
@@ -36,7 +36,7 @@ namespace ZB.CollisionCheck
         }
         private void OnTriggerEnter(Collider other)
         {
-            if (((1 << other.gameObject.layer) & targetLayer) != 0) 
+            if (CheckCondition(other.gameObject))
             {
                 tf_lastTouched = other.transform;
                 touching = true;
@@ -45,11 +45,51 @@ namespace ZB.CollisionCheck
         }
         private void OnTriggerExit(Collider other)
         {
-            if (((1 << other.gameObject.layer) & targetLayer) != 0)
+            if (CheckCondition(other.gameObject))
             {
                 touching = false;
                 uEvent_Exit.Invoke();
             }
+        }
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (CheckCondition(collision.gameObject))
+            {
+                tf_lastTouched = collision.transform;
+                touching = true;
+                uEvent_Enter.Invoke();
+            }
+        }
+        private void OnCollisionExit2D(Collision2D collision)
+        {
+            if (CheckCondition(collision.gameObject))
+            {
+                touching = false;
+                uEvent_Exit.Invoke();
+            }
+        }
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (CheckCondition(collision.gameObject))
+            {
+                tf_lastTouched = collision.transform;
+                touching = true;
+                uEvent_Enter.Invoke();
+            }
+        }
+        private void OnTriggerExit2D(Collider2D collision)
+        {
+            if (CheckCondition(collision.gameObject))
+            {
+                touching = false;
+                uEvent_Exit.Invoke();
+            }
+        }
+
+        private bool CheckCondition(GameObject gameObject)
+        {
+            return ((1 << gameObject.layer) & targetLayer) != 0;
         }
     }
 }
