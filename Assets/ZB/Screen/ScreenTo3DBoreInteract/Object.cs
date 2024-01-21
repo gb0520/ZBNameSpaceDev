@@ -7,6 +7,7 @@ namespace ZB.Screen.ScreenTo3DBoreInteract
 {
     public class Object : MonoBehaviour
     {
+        [Header("ScreenTo3DBoreInteract")]
         public UnityEvent InputEnterEvent;
         public UnityEvent InputExitEvent;
         public bool CurrentInputIsEnter { get; private set; }

@@ -8,6 +8,7 @@ namespace ZB.Screen.ScreenToUiBoreInteract
 {
     public class Object : MonoBehaviour
     {
+        [Header("ScreenToUiBoreInteract")]
         public UnityEvent InputEnterEvent;
         public UnityEvent InputExitEvent;
         public bool CurrentInputIsEnter { get; private set; }

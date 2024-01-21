@@ -8,6 +8,7 @@ namespace ZB.Screen.ScreenTo3DBoreInteract
     public enum InputValue { None, LeftMouse, RightMouse }
     public class Manager : MonoBehaviour
     {
+        [Header("ScreenTo3DBoreInteract")]
         [SerializeField]
         private bool isActive;
         [SerializeField]

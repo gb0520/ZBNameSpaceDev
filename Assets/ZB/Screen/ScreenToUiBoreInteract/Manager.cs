@@ -9,6 +9,7 @@ namespace ZB.Screen.ScreenToUiBoreInteract
     public enum InputValue { None, LeftMouse, RightMouse }
     public class Manager : MonoBehaviour
     {
+        [Header("ScreenToUiBoreInteract")]
         [SerializeField]
         private bool isActive;
         [SerializeField]
