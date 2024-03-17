@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 namespace ZB.Screen.ScreenTo3DBoreInteract
@@ -9,12 +10,17 @@ namespace ZB.Screen.ScreenTo3DBoreInteract
     public class Manager : MonoBehaviour
     {
         [Header("ScreenTo3DBoreInteract")]
+        public UnityEvent LeftInputEnterEvent;
+        public UnityEvent LeftInputExitEvent;
+        public UnityEvent RightInputEnterEvent;
+        public UnityEvent RightInputExitEvent;
+
+        public List<Object> current3DBoreObject;
+
         [SerializeField]
         private bool isActive;
         [SerializeField]
         private InputValue currentInputValue;
-        [SerializeField]
-        private List<Object> current3DBoreObject;
         [SerializeField]
         private LayerMask targetLayer;
 
@@ -35,17 +41,28 @@ namespace ZB.Screen.ScreenTo3DBoreInteract
             currentInputValue = inputValue;
             current3DBoreObject = GetMouseOverlapObjects(Input.mousePosition);
 
+            if (inputValue == InputValue.LeftMouse)
+                LeftInputEnterEvent.Invoke();
+            if (inputValue == InputValue.RightMouse)
+                RightInputEnterEvent.Invoke();
+            
             if (current3DBoreObject == null) return;
 
             for (int i = 0; i < current3DBoreObject.Count; i++)
             {
                 current3DBoreObject[i].InputEnter(inputValue);
             }
+
         }
         public void OnInputExit(InputValue inputValue)
         {
             currentInputValue = inputValue;
             current3DBoreObject = GetMouseOverlapObjects(Input.mousePosition);
+
+            if (inputValue == InputValue.LeftMouse)
+                LeftInputExitEvent.Invoke();
+            if (inputValue == InputValue.RightMouse)
+                RightInputExitEvent.Invoke();
 
             if (current3DBoreObject == null) return;
 

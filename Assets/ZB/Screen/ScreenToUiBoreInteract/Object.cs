@@ -8,20 +8,28 @@ namespace ZB.Screen.ScreenToUiBoreInteract
 {
     public class Object : MonoBehaviour
     {
-        [Header("ScreenToUiBoreInteract")]
-        public UnityEvent InputEnterEvent;
-        public UnityEvent InputExitEvent;
+        [Header("ScreenToUIBoreInteract")]
+        public UnityEvent LeftInputEnterEvent;
+        public UnityEvent LeftInputExitEvent;
+        public UnityEvent RightInputEnterEvent;
+        public UnityEvent RightInputExitEvent;
         public bool CurrentInputIsEnter { get; private set; }
 
         public void InputEnter(InputValue inputValue)
         {
-            InputEnterEvent.Invoke();
+            if (inputValue == InputValue.LeftMouse)
+                LeftInputEnterEvent.Invoke();
+            if (inputValue == InputValue.RightMouse)
+                RightInputEnterEvent.Invoke();
             CurrentInputIsEnter = true;
             OnInputEnter(inputValue);
         }
         public void InputExit(InputValue inputValue)
         {
-            InputExitEvent.Invoke();
+            if (inputValue == InputValue.LeftMouse)
+                LeftInputExitEvent.Invoke();
+            if (inputValue == InputValue.RightMouse)
+                RightInputExitEvent.Invoke();
             CurrentInputIsEnter = false;
             OnInputExit(inputValue);
         }
